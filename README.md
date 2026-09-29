@@ -1,5 +1,7 @@
 # Plataforma didática de Fault Injection (RP2040)
 
+Para a simulação no VS Code, veja o [tutorial Wokwi](wokwi/README.md). Ela usa o mesmo firmware controlador e um modelo digital do Target.
+
 Projeto de laboratório com dois Raspberry Pi Pico e uma CLI Python. O controlador recebe comandos por USB CDC, aguarda o trigger do Pico alvo, espera um atraso configurado, gera um pulso lógico em `EMFI_TRIGGER_OUT` e lê a resposta do alvo por UART. Uma varredura repete isso para vários atrasos e salva CSV.
 
 **`EMFI_TRIGGER_OUT` é apenas um GPIO de 3,3 V.** `SIMULATION_MODE=1` é a única configuração suportada. Não existe estágio EMFI de alta tensão, controle de energia ou interface elétrica para um driver externo. A abstração `emfi_arm()`, `emfi_fire()` e `emfi_disarm()` separa esta implementação lógica de uma eventual interface futura.
@@ -73,7 +75,7 @@ RESULT 00001 50 100 OK 10423 RESULT:02FB0408
 
 Os campos são `experiment_id delay_us pulse_width_us classe elapsed_us resposta_target`. O tempo é desde o envio de `RUN` ao alvo até o resultado; não é o tempo de pulso. Timeout usa resposta `-`. Ao terminar uma varredura, envia `SWEEP COMPLETE`. Erros têm formato `ERROR <CÓDIGO>`. `DISARM` interrompe uma execução; nesse caso não há resultado para a tentativa interrompida. Limites: 95 caracteres por linha e 10.000 tentativas por sweep.
 
-O alvo espera `RUN\n` em UART1, levanta GP14, soma os inteiros de 1 a 10.000, mantém uma janela de 10 ms, abaixa GP14 e envia `RESULT:02FB0408`. O controlador classifica a resposta exata como `OK`, outro `RESULT:` como `FAULT`, `RESET` como `RESET`, ausência de resposta como `TIMEOUT` e outras respostas como `UNKNOWN`. A classificação está concentrada em `classify()` para futura substituição. O resultado `OK` apenas confirma a resposta digital esperada; não prova que o pulso afetou fisicamente o alvo.
+O alvo espera `RUN\n` em UART1, levanta GP14, soma os inteiros de 1 a 10.000, marca uma janela de execução em GP18, abaixa GP14 ao concluir e envia `RESULT:02FB0408`. O controlador classifica a resposta exata como `OK`, outro `RESULT:` como `FAULT`, `RESET` como `RESET`, ausência de resposta como `TIMEOUT` e outras respostas como `UNKNOWN`. A classificação está concentrada em `classify()` para futura substituição. O resultado `OK` apenas confirma a resposta digital esperada; não prova que o pulso afetou fisicamente o alvo.
 
 Se a resposta chegar **antes** do instante planejado para o pulso, a tentativa termina como `UNKNOWN` e o pulso é cancelado, pois a janela de teste já terminou.
 
@@ -96,7 +98,7 @@ Se houver exatamente uma porta serial no computador, `--port` pode ser omitido. 
 
 O fluxo é `CONFIGURED → WAIT_TRIGGER → DELAY → PULSE → WAIT_RESULT → COMPLETE`, com `IDLE`, `ARMED` e `ERROR` reservados para controle e diagnóstico. Uma interrupção GPIO registra o instante da borda de subida; o laço principal consulta o relógio em microssegundos e chama `emfi_fire()`. Durante o pulso, `sleep_us()` mantém o GPIO alto. Há latência e jitter do laço, da interrupção, das chamadas SDK e da saída USB; portanto **delay e largura reais devem ser medidos no hardware**. O código não promete borda com resolução ou exatidão de nanossegundos. Para temporização mais fina, a próxima revisão deve testar PIO ou periféricos temporizados e calibrar com instrumento.
 
-O projeto foi **compilado** neste ambiente com Pico SDK 2.3.0, CMake 4.3.4, GCC ARM 15.2.1 e Python 3.11; os dois arquivos `.uf2` foram gerados. A sintaxe da CLI e um teste do parser/CSV também passaram. **Ainda não houve teste nos Picos nem medição das bordas**: os primeiros testes em bancada devem confirmar pinout, UART, timeouts e limites elétricos antes de conectar qualquer estágio externo.
+O projeto foi **compilado** neste ambiente com Pico SDK 2.3.0, CMake 4.3.4, GCC ARM 15.2.1 e Python 3.11; os dois arquivos `.uf2` foram gerados. A sintaxe da CLI e um teste do parser/CSV também passaram. O modelo Wokwi compilou em WASM e o diagrama passou no linter, mas **a simulação ainda não foi executada**, nem houve teste nos Picos ou medição das bordas. Os primeiros testes em bancada devem confirmar pinout, UART, timeouts e limites elétricos antes de conectar qualquer estágio externo.
 
 ## Roadmap
 

@@ -1,0 +1,10 @@
+[wokwi]
+version = 1
+firmware = 'build/enfi_controller.uf2'
+elf = 'build/enfi_controller.elf'
+vcdFile = 'wokwi/logic-capture.vcd'
+rfc2217ServerPort = 4000
+
+[[chip]]
+name = 'target-model'
+binary = 'wokwi/chips/target-model.chip.wasm'

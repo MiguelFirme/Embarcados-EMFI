@@ -1,0 +1,5 @@
+{
+  "name": "EMFI Target Model (simulation only)",
+  "author": "ENFI",
+  "pins": ["VCC", "GND", "RX", "TX", "TRIGGER", "FIRE", "EXEC", "RESET", "HOLD"]
+}

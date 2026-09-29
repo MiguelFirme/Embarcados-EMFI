@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "author": "ENFI",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-pi-pico", "id": "controller", "top": 0, "left": 0, "attrs": {} },
+    { "type": "chip-target-model", "id": "target", "top": 0, "left": 300, "attrs": {} },
+    { "type": "wokwi-logic-analyzer", "id": "logic", "top": 260, "left": 310,
+      "attrs": { "bufferSize": "100000" } },
+    { "type": "wokwi-pushbutton", "id": "hold", "top": 205, "left": 460,
+      "attrs": { "label": "Hold for TIMEOUT", "bounce": "0" } }
+  ],
+  "connections": [
+    [ "controller:GP4", "target:RX", "green", [] ],
+    [ "controller:GP5", "target:TX", "green", [] ],
+    [ "target:TRIGGER", "controller:GP14", "blue", [] ],
+    [ "controller:GP15", "target:FIRE", "red", [] ],
+    [ "controller:GP16", "target:RESET", "orange", [] ],
+    [ "target:TRIGGER", "logic:D0", "blue", [] ],
+    [ "controller:GP15", "logic:D1", "red", [] ],
+    [ "target:EXEC", "logic:D2", "purple", [] ],
+    [ "controller:GP16", "logic:D3", "orange", [] ],
+    [ "controller:GND.1", "target:GND", "black", [] ],
+    [ "controller:GND.1", "logic:GND", "black", [] ],
+    [ "controller:GND.1", "hold:2.r", "black", [] ],
+    [ "hold:1.r", "target:HOLD", "gray", [] ],
+    [ "controller:3V3", "target:VCC", "red", [] ]
+  ],
+  "serialMonitor": { "display": "always", "newline": "lf" }
+}

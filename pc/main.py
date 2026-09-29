@@ -7,6 +7,7 @@ import serial
 
 from experiment import parse_result
 from logger import append_result
+from plot import plot_fault_rate
 from serial_interface import PicoClient, ProtocolError, available_ports
 
 
@@ -70,12 +71,23 @@ def main(argv=None):
     for name in ("start", "end", "step", "repetitions"):
         sweep.add_argument(f"--{name}", type=int, required=True)
     add_trial_options(sweep)
+    plot = sub.add_parser("plot", help="save fault rate by delay as a PNG")
+    plot.add_argument("--input", default="results.csv", help="CSV path")
+    plot.add_argument("--output", default="fault-rate.png", help="PNG path")
     args = parser.parse_args(argv)
 
     if args.action == "ports":
         for device, description in available_ports():
             print(f"{device}: {description}")
         return 0
+    if args.action == "plot":
+        try:
+            plot_fault_rate(args.input, args.output)
+            print(f"saved {args.output}")
+            return 0
+        except (OSError, ValueError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
     ports = available_ports()
     if not args.port:
         if len(ports) != 1:

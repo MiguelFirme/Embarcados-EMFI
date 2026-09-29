@@ -1,0 +1,41 @@
+name: EMFI controller and simulated target
+version: 1
+author: ENFI
+steps:
+  - write-serial: "PING\n"
+  - wait-serial: "OK PONG"
+  - write-serial: "STATUS\n"
+  - wait-serial: "STATUS IDLE"
+
+  # FIRE at 3 ms overlaps the model's execution interval [2 ms, 7 ms).
+  - write-serial: "SET DELAY_US 3000\n"
+  - wait-serial: "OK"
+  - write-serial: "SET WIDTH_US 100\n"
+  - wait-serial: "OK"
+  - write-serial: "RUN\n"
+  - wait-serial: "EVENT TRIGGER"
+  - wait-serial: "EVENT PULSE"
+  - wait-serial: "RESULT 00001 3000 100 FAULT"
+
+  # FIRE at 0 us is before the model's execution interval.
+  - write-serial: "SET DELAY_US 0\n"
+  - wait-serial: "OK"
+  - write-serial: "RUN\n"
+  - wait-serial: "RESULT 00002 0 100 OK"
+
+  - write-serial: "SWEEP START 0 5000 1000 1\n"
+  - wait-serial: "SWEEP COMPLETE"
+
+  # The button suppresses the UART result while trigger/pulse still occur.
+  - write-serial: "SET RESULT_TIMEOUT_MS 50\n"
+  - wait-serial: "OK"
+  - set-control:
+      part-id: hold
+      control: pressed
+      value: 1
+  - write-serial: "RUN\n"
+  - wait-serial: "TIMEOUT"
+  - set-control:
+      part-id: hold
+      control: pressed
+      value: 0

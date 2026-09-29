@@ -17,7 +17,8 @@ def available_ports():
 class PicoClient:
     def __init__(self, port, baudrate=115200, timeout=2.0):
         # baudrate is nominal for USB CDC; it does not set the USB bit rate.
-        self.serial = serial.Serial(port, baudrate=baudrate, timeout=timeout)
+        # serial_for_url accepts both COM ports and Wokwi's RFC2217 endpoint.
+        self.serial = serial.serial_for_url(port, baudrate=baudrate, timeout=timeout)
 
     def close(self):
         self.serial.close()
