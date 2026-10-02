@@ -200,6 +200,9 @@ void experiment_tick(void) {
         }
     }
     if (state == EXP_WAIT_RESULT) {
+        // The pulse above advances time; do not subtract its new timestamp
+        // from the stale pre-pulse value (unsigned underflow).
+        now = time_us_64();
         char response[40];
         if (target_take_response(response, sizeof(response))) {
             finish_trial(classify(response), response);
